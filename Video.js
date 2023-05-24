@@ -465,6 +465,7 @@ Video.propTypes = {
   stereoPan: PropTypes.number,
   rate: PropTypes.number,
   pictureInPicture: PropTypes.bool,
+  allowPictureInPicture: PropTypes.bool,
   playInBackground: PropTypes.bool,
   preferredForwardBufferDuration: PropTypes.number,
   playWhenInactive: PropTypes.bool,

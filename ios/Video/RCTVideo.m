@@ -74,6 +74,7 @@ static int const RCTVideoUnset = -1;
   float _preferredForwardBufferDuration;
   BOOL _playWhenInactive;
   BOOL _pictureInPicture;
+  BOOL _allowPictureInPicture;
   NSString * _ignoreSilentSwitch;
   NSString * _mixWithOthers;
   NSString * _resizeMode;
@@ -118,6 +119,7 @@ static int const RCTVideoUnset = -1;
     _allowsExternalPlayback = YES;
     _playWhenInactive = false;
     _pictureInPicture = false;
+    _allowPictureInPicture = false;
     _ignoreSilentSwitch = @"inherit"; // inherit, ignore, obey
     _mixWithOthers = @"inherit"; // inherit, mix, duck
 #if TARGET_OS_IOS
@@ -885,6 +887,41 @@ static int const RCTVideoUnset = -1;
   }
   
   _pictureInPicture = pictureInPicture;
+  if (_pipController && _pictureInPicture && ![_pipController isPictureInPictureActive]) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [_pipController startPictureInPicture];
+    });
+  } else if (_pipController && !_pictureInPicture && [_pipController isPictureInPictureActive]) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [_pipController stopPictureInPicture];
+    });
+  }
+  #endif
+}
+
+- (void)setAllowPictureInPicture:(BOOL)allowPictureInPicture
+{
+  #if TARGET_OS_IOS
+  if (_allowPictureInPicture == allowPictureInPicture) {
+    return;
+  }
+  
+  _allowPictureInPicture = allowPictureInPicture;
+  if(_allowPictureInPicture){
+    if(!_pipController){
+      [self setupPipController];
+    }
+  }
+  else if(_pipController != nil) {
+    if([_pipController isPictureInPictureActive]){
+      dispatch_async(dispatch_get_main_queue(), ^{
+        [_pipController stopPictureInPicture];
+        _pipController = nil;
+      });
+    }else{
+      _pipController = nil;
+    }
+  }
   if (_pipController && _pictureInPicture && ![_pipController isPictureInPictureActive]) {
     dispatch_async(dispatch_get_main_queue(), ^{
       [_pipController startPictureInPicture];
